@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IT News Reader - Information Technology Articles</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet"
+  />
+  <style>
+    /* Reset and base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: white;
+      color: #374151; /* Gray 700 */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    /* Header */
+    header.main-header {
+      background: #4f46e5; /* Indigo 600 */
+      color: white;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+    }
+    header.main-header .logo {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      user-select: none;
+    }
+    nav.main-nav {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    nav.main-nav a {
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 8px 12px;
+      border-radius: 0.5rem;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+    nav.main-nav a:hover,
+    nav.main-nav a:focus {
+      background-color: rgba(255 255 255 / 0.2);
+      outline: none;
+    }
+    nav.main-nav a .material-icons {
+      font-size: 20px;
+      margin-right: 6px;
+    }
+    button#logout-btn {
+      background: transparent;
+      border: 1.5px solid white;
+      padding: 6px 14px;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    button#logout-btn:hover,
+    button#logout-btn:focus {
+      background-color: white;
+      color: #4f46e5;
+      outline: none;
+    }
+
+    /* Mobile menu button */
+    .mobile-menu-button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: none;
+    }
+    @media (max-width: 767px) {
+      nav.main-nav {
+        display: none;
+        position: fixed;
+        top: 64px;
+        right: 0;
+        background: #4f46e5;
+        width: 75vw;
+        max-width: 280px;
+        height: calc(100vh - 64px);
+        flex-direction: column;
+        padding: 24px 16px;
+        gap: 16px;
+        box-shadow: -10px 0 25px rgba(79, 70, 229, 0.5);
+        transform: translateX(100%);
+        transition: transform 0.25s ease;
+        z-index: 1100;
+        border-radius: 0 0 0 12px;
+      }
+      nav.main-nav.open {
+        display: flex;
+        transform: translateX(0);
+      }
+      .mobile-menu-button {
+        display: block;
+      }
+      button#logout-btn {
+        padding: 8px 16px;
+        font-size: 1.125rem;
+      }
+    }
+
+    /* Main content layout */
+    main.content-area {
+      flex: 1;
+      padding: 32px 24px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+      main.content-area {
+        grid-template-columns: 250px 1fr;
+      }
+    }
+    @media (min-width: 1024px) {
+      main.content-area {
+        grid-template-columns: 280px 1fr 280px;
+      }
+    }
+
+    /* Sidebar */
+    aside.sidebar {
+      background: #f3f4f6; /* Gray 100 */
+      border-radius: 1rem;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgb(0 0 0 / 0.05);
+      height: fit-content;
+      position: sticky;
+      top: 96px;
+      font-weight: 600;
+      font-size: 1.125rem;
+      color: #4b5563; /* Gray 600 */
+      user-select: none;
+      display: none;
+    }
+    @media (min-width: 768px) {
+      aside.sidebar {
+        display: block;
+      }
+    }
+
+    /* Articles container */
+    section.articles {
+      display: grid;
+      gap: 24px;
+    }
+    @media (min-width: 768px) {
+      section.articles {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      @container (min-width: 600px) {
+        section.articles {
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+      }
+    }
+
+    /* Article card */
+    article.article-card {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 8px 20px rgb(0 0 0 / 0.07);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+    article.article-card:hover,
+    article.article-card:focus-within {
+      box-shadow: 0 12px 32px rgb(79 70 229 / 0.3);
+      outline: none;
+    }
+    article.article-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937; /* Gray 800 */
+      user-select: text;
+      line-height: 1.2;
+    }
+    article.article-card p {
+      color: #6b7280; /* Gray 500 */
+      font-size: 1rem;
+      line-height: 1.4;
+      flex-grow: 1;
+      user-select: text;
+    }
+    article.article-card time {
+      font-size: 0.875rem;
+      color: #9ca3af; /* Gray 400 */
+    }
+    /* Article image placeholder */
+    .article-image {
+      width: 100%;
+      max-height: 180px;
+      border-radius: 0.75rem;
+      object-fit: cover;
+      user-select: none;
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #4f46e5;
+      font-size: 3rem;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    /* Footer */
+    footer.page-footer {
+      background: #f9fafb; /* Gray 50 */
+      padding: 32px 24px;
+      font-size: 0.875rem;
+      color: #6b7280; /* Gray 500 */
+      text-align: center;
+      user-select: none;
+      border-top: 1px solid #e5e7eb;
+      margin-top: auto;
+    }
+
+    /* Category buttons in sidebar */
+    ul.category-list {
+      margin-top: 12px;
+      list-style: none;
+      font-weight: normal;
+      color: #6b7280;
+      font-size: 1rem;
+      padding-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    ul.category-list li button {
+      background: none;
+      border: none;
+      font: inherit;
+      text-align: left;
+      color: #6b7280;
+      padding: 8px 12px;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    ul.category-list li button[aria-pressed="true"],
+    ul.category-list li button:hover,
+    ul.category-list li button:focus {
+      background-color: #e0e7ff;
+      color: #4f46e5;
+      outline: none;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <header class="main-header" role="banner">
+    <div style="display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:auto; width:100%;">
+      <div class="logo" aria-label="IT News Reader logo" tabindex="0">IT News Reader</div>
+
+      <button
+        class="mobile-menu-button" 
+        aria-label="Open navigation menu" 
+        aria-haspopup="true" 
+        aria-expanded="false" 
+        aria-controls="main-nav"
+      >&#xE5D2;</button>
+
+      <nav id="main-nav" class="main-nav" aria-label="Primary navigation" role="navigation">
+        <a href="#home" tabindex="0"><span class="material-icons" aria-hidden="true">home</span>Home</a>
+        <a href="#categories" tabindex="0"><span class="material-icons" aria-hidden="true">category</span>Categories</a>
+        <a href="#bookmarks" tabindex="0"><span class="material-icons" aria-hidden="true">bookmark</span>Bookmarks</a>
+        <a href="#profile" tabindex="0"><span class="material-icons" aria-hidden="true">person</span>Profile</a>
+        <button id="logout-btn" aria-label="Logout user" tabindex="0">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="content-area" role="main" tabindex="0">
+    <aside class="sidebar" aria-label="News categories sidebar">
+      Categories
+      <ul class="category-list" role="list">
+        <li><button class="category-btn" data-category="all" aria-pressed="true">All</button></li>
+        <li><button class="category-btn" data-category="ai" aria-pressed="false">Artificial Intelligence</button></li>
+        <li><button class="category-btn" data-category="cyber" aria-pressed="false">Cybersecurity</button></li>
+        <li><button class="category-btn" data-category="cloud" aria-pressed="false">Cloud Computing</button></li>
+        <li><button class="category-btn" data-category="programming" aria-pressed="false">Programming</button></li>
+      </ul>
+    </aside>
+
+    <section class="articles" aria-label="News articles list" tabindex="0">
+      <!-- Articles will load here -->
+    </section>
+
+    <aside class="sidebar" aria-label="Bookmarks and saved articles" id="bookmarks-sidebar" hidden>
+      Bookmarks
+      <ul id="bookmarks-list" style="margin-top:12px; list-style:none; font-weight:normal; font-size:1rem; padding-left:0; color:#6b7280;">
+        <li>No bookmarks yet</li>
+      </ul>
+    </aside>
+  </main>
+
+  <footer class="page-footer" aria-label="Page footer">
+    &copy; 2024 IT News Reader. All rights reserved.
+  </footer>
+
+<script>
+  // Sample articles data
+  const sampleArticles = [
+    {
+      id: '1',
+      title: 'Breakthrough in Artificial Intelligence Revolutionizes Industry',
+      category: 'ai',
+      summary: 'AI systems are now able to perform complex tasks with unprecedented accuracy, impacting sectors from healthcare to finance.',
+      date: '2024-06-10',
+      url: '#',
+      imageAlt: 'AI brain digital network representation',
+    },
+    {
+      id: '2',
+      title: 'Cybersecurity in 2024: Emerging Threats and Solutions',
+      category: 'cyber',
+      summary: 'As cyber threats evolve, new defensive technologies and strategies are being developed to protect critical infrastructure worldwide.',
+      date: '2024-06-08',
+      url: '#',
+      imageAlt: 'Cybersecurity shield icon with digital locks',
+    },
+    {
+      id: '3',
+      title: 'Cloud Computing Trends: Scalability and Security',
+      category: 'cloud',
+      summary: 'The cloud landscape continues to expand with hybrid solutions and enhanced data privacy becoming top priorities.',
+      date: '2024-06-05',
+      url: '#',
+      imageAlt: 'Cloud computing network with data streams',
+    },
+    {
+      id: '4',
+      title: 'Top Programming Languages to Learn in 2024',
+      category: 'programming',
+      summary: 'Developers are focusing on versatility and performance, with languages like Rust and Python leading the way.',
+      date: '2024-06-02',
+      url: '#',
+      imageAlt: 'Code snippets on a laptop screen',
+    },
+    {
+      id: '5',
+      title: 'How AI is Transforming Software Development',
+      category: 'ai',
+      summary: 'AI-powered code assistants help speed up development cycles and improve code quality across projects.',
+      date: '2024-06-01',
+      url: '#',
+      imageAlt: 'Developer using AI coding assistant',
+    },
+    {
+      id: '6',
+      title: 'New Advances in Quantum Computing Impact Future Tech',
+      category: 'programming',
+      summary: 'Quantum computers promise to solve problems impossible for classical machines, opening new frontiers.',
+      date: '2024-05-29',
+      url: '#',
+      imageAlt: 'Quantum computing circuit diagram',
+    },
+  ];
+
+  const LOCALSTORAGE_LOGGED_IN_USER_KEY = 'itnewsreader_loggedinuser';
+  const LOCALSTORAGE_BOOKMARKS_KEY = 'itnewsreader_bookmarks';
+
+  const articlesSection = document.querySelector('section.articles');
+  const categoryButtons = document.querySelectorAll('.category-btn');
+  const bookmarksSidebar = document.getElementById('bookmarks-sidebar');
+  const bookmarksList = document.getElementById('bookmarks-list');
+  const logoutBtn = document.getElementById('logout-btn');
+  const mobileMenuBtn = document.querySelector('.mobile-menu-button');
+  const mainNav = document.getElementById('main-nav');
+
+  // Check user session; redirect if not logged in
+  window.addEventListener('DOMContentLoaded', () => {
+    const loggedInUser = localStorage.getItem(LOCALSTORAGE_LOGGED_IN_USER_KEY);
+    if (!loggedInUser) {
+      window.location.href = 'login.html';
+    } else {
+      loadArticles('all');
+      loadBookmarks();
+      updateCategoryButtons('all');
+    }
+  });
+
+  // Load articles based on category
+  function loadArticles(category) {
+    articlesSection.innerHTML = '';
+    const filtered = category === 'all' ? sampleArticles : sampleArticles.filter(a => a.category === category);
+    if (filtered.length === 0) {
+      articlesSection.innerHTML = '<p style="font-style:italic; color:#9ca3af;">No articles found for this category.</p>';
+      return;
+    }
+    filtered.forEach(article => {
+      const articleEl = document.createElement('article');
+      articleEl.className = 'article-card';
+      articleEl.setAttribute('tabindex', '0');
+      articleEl.setAttribute('role', 'article');
+      articleEl.setAttribute('aria-label', article.title);
+
+      const imgDiv = document.createElement('div');
+      imgDiv.className = 'article-image';
+      imgDiv.setAttribute('aria-hidden', 'true');
+      imgDiv.title = article.imageAlt;
+      imgDiv.textContent = article.title.charAt(0);
+      articleEl.appendChild(imgDiv);
+
+      const heading = document.createElement('h3');
+      heading.textContent = article.title;
+      articleEl.appendChild(heading);
+
+      const summary = document.createElement('p');
+      summary.textContent = article.summary;
+      articleEl.appendChild(summary);
+
+      const timeEl = document.createElement('time');
+      timeEl.dateTime = article.date;
+      timeEl.textContent = new Date(article.date).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      articleEl.appendChild(timeEl);
+
+      // Bookmark button
+      const bookmarkBtn = document.createElement('button');
+      bookmarkBtn.className = 'btn-primary';
+      bookmarkBtn.style.marginTop = 'auto';
+      bookmarkBtn.style.alignSelf = 'flex-start';
+      bookmarkBtn.style.fontWeight = '600';
+      bookmarkBtn.style.fontSize = '0.9rem';
+      bookmarkBtn.style.padding = '6px 12px';
+      bookmarkBtn.textContent = isBookmarked(article.id) ? 'Remove Bookmark' : 'Add Bookmark';
+      bookmarkBtn.setAttribute('aria-pressed', isBookmarked(article.id).toString());
+      bookmarkBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleBookmark(article.id);
+        bookmarkBtn.textContent = isBookmarked(article.id) ? 'Remove Bookmark' : 'Add Bookmark';
+        bookmarkBtn.setAttribute('aria-pressed', isBookmarked(article.id).toString());
+        loadBookmarks();
+      });
+
+      articleEl.appendChild(bookmarkBtn);
+
+      articlesSection.appendChild(articleEl);
+    });
+  }
+
+  // Category buttons click handling
+  categoryButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.getAttribute('data-category');
+      loadArticles(category);
+      updateCategoryButtons(category);
+      // Show/hide bookmarks sidebar
+      if (category === 'bookmarks') {
+        bookmarksSidebar.hidden = false;
+        articlesSection.hidden = true;
+        document.querySelector('aside.sidebar[aria-label="News categories sidebar"]').hidden = true;
+      } else {
+        bookmarksSidebar.hidden = true;
+        articlesSection.hidden = false;
+        document.querySelector('aside.sidebar[aria-label="News categories sidebar"]').hidden = false;
+      }
+    });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        btn.click();
+      }
+    });
+  });
+
+  // Update which category button is active
+  function updateCategoryButtons(activeCategory) {
+    categoryButtons.forEach(btn => {
+      const cat = btn.getAttribute('data-category');
+      const pressed = cat === activeCategory;
+      btn.setAttribute('aria-pressed', pressed.toString());
+    });
+  }
+
+  // Bookmark storage management
+  function getBookmarks() {
+    try {
+      const bm = JSON.parse(localStorage.getItem(LOCALSTORAGE_BOOKMARKS_KEY) || '{}');
+      return bm;
+    } catch {
+      return {};
+    }
+  }
+  function setBookmarks(bookmarks) {
+    localStorage.setItem(LOCALSTORAGE_BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  }
+  function isBookmarked(articleId) {
+    const bookmarks = getBookmarks();
+    return bookmarks[articleId] === true;
+  }
+  function toggleBookmark(articleId) {
+    const bookmarks = getBookmarks();
+    if (bookmarks[articleId]) {
+      delete bookmarks[articleId];
+    } else {
+      bookmarks[articleId] = true;
+    }
+    setBookmarks(bookmarks);
+  }
+
+  // Load bookmarks list in sidebar
+  function loadBookmarks() {
+    const bookmarks = getBookmarks();
+    bookmarksList.innerHTML = '';
+    const bookmarkedArticles = sampleArticles.filter(a => bookmarks[a.id]);
+    if (bookmarkedArticles.length === 0) {
+      bookmarksList.innerHTML = '<li>No bookmarks yet</li>';
+      return;
+    }
+    bookmarkedArticles.forEach(article => {
+      const li = document.createElement('li');
+      li.style.marginBottom = '12px';
+
+      const link = document.createElement('a');
+      link.href = article.url;
+      link.textContent = article.title;
+      link.style.color = '#4f46e5'; // Indigo 600
+      link.style.fontWeight = '600';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+
+      li.appendChild(link);
+      bookmarksList.appendChild(li);
+    });
+  }
+
+  // Logout function
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem(LOCALSTORAGE_LOGGED_IN_USER_KEY);
+    localStorage.removeItem(LOCALSTORAGE_BOOKMARKS_KEY);
+    window.location.href = 'login.html';
+  });
+
+  // Mobile menu toggle
+  mobileMenuBtn.addEventListener('click', () => {
+    if (mainNav.classList.contains('open')) {
+      mainNav.classList.remove('open');
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    } else {
+      mainNav.classList.add('open');
+      mobileMenuBtn.setAttribute('aria-expanded', 'true');
+    }
+  });
+</script>
+</body>
+</html>

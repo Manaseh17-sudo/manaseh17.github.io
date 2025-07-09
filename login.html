@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IT News Reader - Login</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet"
+  />
+  <style>
+    /* Reset and base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+      color: #374151; /* Gray 700 */
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+    .auth-card {
+      background: #fff;
+      padding: 48px 40px;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgb(0 0 0 / 0.05);
+      min-width: 320px;
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 32px;
+      color: #4f46e5; /* Indigo 600 */
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+    input[type="text"],
+    input[type="password"] {
+      padding: 12px 16px;
+      font-size: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #d1d5db;
+      transition: border-color 0.3s ease;
+      width: 100%;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    }
+    .btn-primary {
+      background-color: #4f46e5;
+      color: white;
+      padding: 14px;
+      font-size: 1.125rem;
+      border-radius: 0.75rem;
+      font-weight: 700;
+      box-shadow: 0 6px 12px rgba(79, 70, 229, 0.4);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary:hover,
+    .btn-primary:focus {
+      background-color: #4338ca;
+      outline: none;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(67, 56, 202, 0.5);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 8px rgba(67, 56, 202, 0.3);
+    }
+    .message {
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 12px 16px;
+      border-radius: 0.625rem;
+      margin-top: -16px;
+      display: none;
+    }
+    .message.error {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .message.success {
+      background-color: #d1fae5;
+      color: #047857;
+      border: 1px solid #6ee7b7;
+    }
+    .register-link {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #4f46e5;
+      font-weight: 600;
+    }
+    .register-link a {
+      color: #4338ca;
+      text-decoration: underline;
+    }
+    .register-link a:hover,
+    .register-link a:focus {
+      color: #3730a3;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <section class="auth-card" aria-label="Login form">
+    <h1>Login to IT News Reader</h1>
+    <form id="login-form" autocomplete="on" novalidate>
+      <div>
+        <label for="login-username">Username</label>
+        <input
+          type="text"
+          id="login-username"
+          name="login-username"
+          autocomplete="username"
+          required
+          aria-required="true"
+          aria-describedby="username-error"
+        />
+        <div id="username-error" class="message error" aria-live="assertive"></div>
+      </div>
+      <div>
+        <label for="login-password">Password</label>
+        <input
+          type="password"
+          id="login-password"
+          name="login-password"
+          autocomplete="current-password"
+          required
+          aria-required="true"
+          aria-describedby="password-error"
+        />
+        <div id="password-error" class="message error" aria-live="assertive"></div>
+      </div>
+      <button type="submit" class="btn-primary" aria-label="Submit login form">Login</button>
+      <div id="login-message" class="message" aria-live="assertive"></div>
+    </form>
+    <p class="register-link, reset-link">
+      Don't have an account? <a href="register.html">Register here</a>
+    </p>
+
+  </section>
+
+  <script>
+    // Password hashing helper
+    async function hashPassword(pass) {
+      const enc = new TextEncoder();
+      const buf = await crypto.subtle.digest('SHA-256', enc.encode(pass));
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+    // Retrieve users from localStorage
+    function getUsers() {
+      const usersStr = localStorage.getItem('itnewsreader_users');
+      if (!usersStr) return {};
+      try {
+        return JSON.parse(usersStr);
+      } catch {
+        return {};
+      }
+    }
+    // Show message
+    function showMessage(container, message, isError = true) {
+      if (!message) {
+        container.style.display = 'none';
+        container.textContent = '';
+        container.className = 'message';
+      } else {
+        container.style.display = 'block';
+        container.textContent = message;
+        container.className = isError ? 'message error' : 'message success';
+      }
+    }
+
+    // Basic validation
+    function validateUsername(username) {
+      if (!username || username.trim().length < 3) {
+        return 'Username must be at least 3 characters.';
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return 'Username can only contain letters, numbers, and underscores.';
+      }
+      return '';
+    }
+    function validatePassword(password) {
+      if (!password || password.length < 6) {
+        return 'Password must be at least 6 characters.';
+      }
+      return '';
+    }
+
+    // Form elements
+    const loginForm = document.getElementById('login-form');
+    const usernameInput = document.getElementById('login-username');
+    const passwordInput = document.getElementById('login-password');
+    const usernameError = document.getElementById('username-error');
+    const passwordError = document.getElementById('password-error');
+    const loginMessage = document.getElementById('login-message');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showMessage(loginMessage, '');
+      // Reset errors
+      showMessage(usernameError, '');
+      showMessage(passwordError, '');
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      const usernameErr = validateUsername(username);
+      const passwordErr = validatePassword(password);
+
+      if (usernameErr) {
+        showMessage(usernameError, usernameErr);
+        usernameInput.focus();
+        return;
+      }
+      if (passwordErr) {
+        showMessage(passwordError, passwordErr);
+        passwordInput.focus();
+        return;
+      }
+
+      const users = getUsers();
+      if (!users[username]) {
+        showMessage(loginMessage, 'Username does not exist. Please register first.');
+        usernameInput.focus();
+        return;
+      }
+      const hashedPass = await hashPassword(password);
+      if (users[username] !== hashedPass) {
+        showMessage(loginMessage, 'Incorrect password.');
+        passwordInput.focus();
+        return;
+      }
+      // Success: save logged in user and redirect to main page
+      localStorage.setItem('itnewsreader_loggedinuser', username);
+      showMessage(loginMessage, 'Login successful! Redirecting...', false);
+      setTimeout(() => {
+        window.location.href = 'main.html';
+      }, 1000);
+    });
+
+    // If already logged in, redirect automatically
+    window.addEventListener('DOMContentLoaded', () => {
+      const loggedInUser = localStorage.getItem('itnewsreader_loggedinuser');
+      if (loggedInUser) {
+        window.location.href = 'main.html';
+      }
+    });
+  </script>
+</body>
+</html>
